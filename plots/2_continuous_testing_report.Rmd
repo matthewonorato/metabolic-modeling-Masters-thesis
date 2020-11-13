@@ -1,0 +1,79 @@
+---
+title: 'Metabolic Model Update: Continuous Testing Report'
+author: 'Matthew Onorato'
+version: '0.0.2'
+date: '4/12/2020'
+maintainer: 'Matthew Onorato'
+email: 'monorato2@gmail.com' > 'monorato4398@sdsu.edu'
+status: 'final'
+output: html_document
+---
+
+DESCRIPTION: This script creates 10 line charts that each track a particular
+             model statistic after each update to the model.
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+library(gridExtra)
+library(grid)
+library(gridtext)
+
+rm(list = ls())
+
+work_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(work_dir)
+getwd()
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+test_suite <- read.csv('../../results/iEK1008_test_suite.tsv', sep='\t')
+
+# remove rows 2-11 (make plot confusing) & columns 1-8 columns (won't be plotted)
+all_tests <- test_suite[c(1:1, 11:nrow(test_suite)), c(8:length(test_suite))] %>%
+  rename(Mass_Imbalanced_Reactions = Imbalanced_Reactions)
+
+all_tests_pvt <- pivot_longer(all_tests, names_to='model_test',
+                              cols=Mass_Imbalanced_Reactions:ATPM_Flux_in_m7H10)
+
+# adds a new index column to be used as x-axis for plot (1:nrows rep'ed 10 times)
+all_tests_pvt <- all_tests_pvt %>%
+  mutate(Index=rep(1:(nrow(all_tests_pvt)/length(all_tests)),
+                   each = length(all_tests))) %>%
+  mutate(model_test=str_replace_all(model_test, '_', ' '))
+
+# reorders data to desired order (for facet_wrap)
+all_tests_pvt$model_test_ordered <- factor(all_tests_pvt$model_test, 
+                                          levels=c(str_replace_all(
+                                            rev(colnames(all_tests)), '_', ' ')))
+
+testcolors <- colorRampPalette(rev(brewer.pal(3, 'Set1')))(length(all_tests))
+
+ci <- ggplot(all_tests_pvt, aes(x=Index, y=value, colour=model_test_ordered)) +
+      geom_line() + facet_wrap(~model_test_ordered,
+                               scale='free_y', ncol=5) +
+      theme_classic(base_size=14) + theme(legend.position = 'none',
+                              axis.title=element_text(face='bold'),
+                              strip.text.x=element_text(size=12, face='bold')) +
+      labs(x='Number of Updates', y='Count/Flux') +
+      scale_color_manual(values=testcolors) +
+      scale_x_continuous(limits=c(0, 300),
+                         breaks=c(0, 50, 100, 150, 200, 250, 300))
+
+cap <- textbox_grob('**Figure 2. Continuous Testing Report.** A total of 298
+                    updates were made to iEK1008 to create iMtb_H37Rv_1132. For
+                    each update, model statistics were tracked to ensure the
+                    model was not negatively impacted during the update
+                    process. Beneficial updates were accepted and retained in the
+                    model (seen here) while detrimental update were rejected (not
+                    shown).', 
+         gp=gpar(fontsize=14), x=unit(0.52, 'npc'), y=unit(0.45, 'npc'))
+
+ci_cap <- grid.arrange(ci, cap, heights=c(2, 0.2))
+
+ggsave('../../results/plots/4_continuous_testing_report.jpg',
+       plot=ci_cap, height=5.5, width=16.9, unit ='in')
+```
