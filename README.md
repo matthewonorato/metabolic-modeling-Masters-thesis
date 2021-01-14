@@ -6,15 +6,15 @@ iMtb_H37Rv_1132 is a constraint-based, genome-scale metabolic model of *Mycobact
 ## Project Overview
 i) **Model Update**: To construct iMtb_H37Rv_1132, iEK1008<sup>1</sup> was updated with 211 new reactions, 112 new metabolites, and 133 new genes curated from literature on *M. tuberculosis* metabolism and scientific databases.
 
-![Model Update](plots/1_base_model_totals.jpg)
+![Model Update](figures/1_base_model_totals.jpg)
 
 ii) **Model Validation**: Model performance metrics - accuracies and Matthew's Correlation Coefficients - were calculated for ten gene essentiality studies, a single Biolog phenotypic assay, and simulations of antibiotic-induced growth inhibition. These metrics were then compared between iEK1008 and iMtb_H37Rv_1132.
 
-![Model Validation](plots/3_essentiality_and_biolog_acc_mcc.jpg)
+![Model Validation](figures/3_essentiality_and_biolog_acc_mcc.jpg)
 
 iii) **Model Application**: The expanded metabolic network that defines iMtb_H37Rv_1132 was evaluated for novel metabolic pathways with clinical significance. A malonate semialdehyde-mediated pathway was identified that allowed the model to overcome pyrazinamide-induced growth inhibition. Experimental verification of this novel pathway is recommended. 
 
-![Model Application](plots/6_proposed_update_to_CoA_synthesis_pathway.png)
+![Model Application](figures/6_proposed_update_to_CoA_synthesis_pathway.png)
 
 ## Requirements 
 R 3.6.2
