@@ -14,7 +14,7 @@ ii) **Model Validation**: Model performance metrics - accuracies and Matthew's C
 
 iii) **Model Application**: The expanded metabolic network that defines iMtb_H37Rv_1132 was evaluated for novel metabolic pathways with clinical significance. A malonate semialdehyde-mediated pathway was identified that allowed the model to overcome pyrazinamide-induced growth inhibition. Experimental verification of this novel pathway is recommended. 
 
-![Model Application](figures/6_proposed_update_to_CoA_synthesis_pathway.png)
+![Model Application](figures/5_proposed_update_to_CoA_synthesis_pathway.png)
 
 ## Requirements 
 R 3.6.2
