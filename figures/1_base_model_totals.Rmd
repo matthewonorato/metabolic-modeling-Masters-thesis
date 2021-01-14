@@ -82,28 +82,27 @@ table <- tableGrob(table_df, theme=tbl_thm, rows=NULL, cols=NULL)
 
 Combines barplot, table, and caption into a single figure
 ```{r}
-cap <- textbox_grob('**Figure 1. Net Increase in Reactions, Metabolites, and
-                    Genes after Updating iEK1008 to iMtb_H37Rv_1132.** Overall,
-                    the curation process led to a net gain of 181 reactions, 80
-                    metabolites, and 124 genes representing increases of 14.8%,
-                    8.0%, and 12.3%, respectively. 32 disconnected metabolites
-                    and 9 disconnected genes were removed and 30 reactions were
-                    removed due to duplicity, lack of experimental evidence, or
-                    Biolog result contradiction.', 
-         gp=gpar(fontsize=10), x=unit(0.55, 'npc'), y=unit(0.5, 'npc'),
-         width=unit(0.9, 'npc'))
-
-rmg_tb_cap <- grid.arrange(rmg, table, cap,
-                           heights=c(1.1, 0.3, 0.3), widths=c(0.2, 2),
-                           layout_matrix=rbind(c(1, 1), c(NA, 2), c(3, 3)))
-
-ggsave('../../results/plots/1_base_model_totals.jpg',
-       plot=rmg_tb_cap, height=6.5, width=6, unit ='in')
-
-# for Git's README
 rmg_tb_cap <- grid.arrange(rmg, table, heights=c(1.1, 0.3), widths=c(0.2, 2),
                            layout_matrix=rbind(c(1, 1), c(NA, 2)))
 
-ggsave('../../results/plots/1_base_model_totals_no_caption.jpg',
+ggsave('1_base_model_totals.jpg',
        plot=rmg_tb_cap, height=5.5, width=6, unit ='in')
+
+# cap <- textbox_grob('**Figure 1. Net Increase in Reactions, Metabolites, and
+#                     Genes after Updating iEK1008 to iMtb_H37Rv_1132.** Overall,
+#                     the curation process led to a net gain of 181 reactions, 80
+#                     metabolites, and 124 genes representing increases of 14.8%,
+#                     8.0%, and 12.3%, respectively. 32 disconnected metabolites
+#                     and 9 disconnected genes were removed and 30 reactions were
+#                     removed due to duplicity, lack of experimental evidence, or
+#                     Biolog result contradiction.',
+#          gp=gpar(fontsize=10), x=unit(0.55, 'npc'), y=unit(0.5, 'npc'),
+#          width=unit(0.9, 'npc'))
+# 
+# rmg_tb_cap <- grid.arrange(rmg, table, cap,
+#                            heights=c(1.1, 0.3, 0.3), widths=c(0.2, 2),
+#                            layout_matrix=rbind(c(1, 1), c(NA, 2), c(3, 3)))
+# 
+# ggsave('1_base_model_totals_caption.jpg',
+#        plot=rmg_tb_cap, height=6.5, width=6, unit ='in')
 ```

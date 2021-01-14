@@ -38,7 +38,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Subsystem accuracies and percent of unblocked reactions for iMtb_H37Rv_1132
 ```{r}
-path_subs_iMtb = '../../results/iMtb_H37Rv_1132_subsystem_accuracy.xlsx'
+path_subs_iMtb = '../data/iMtb_H37Rv_1132_subsystem_accuracy.xlsx'
 
 ss_ess_acc_iMtb <- read_excel(path_subs_iMtb, sheet='gene_essentiality')
 
@@ -69,11 +69,11 @@ sub <- pheatmap(ss_acc_iMtb, cellwidth=12, cellheight=12, fontsize_col=10,
                 cluster_rows=cluster_rows, clustering_distance_rows='euclidean',
                 filename=NA, width=7.2, height=8)
 
-cap <- expression(bold('Figure 5. Gene Essentiality Accuracy and Percentage of Unblocked Reactions by Subsystem'))
+cap <- expression(bold('Figure 4. Gene Essentiality Accuracy and Percentage of Unblocked Reactions by Subsystem'))
 
 sub_cap <- as.ggplot(sub) + labs(caption=cap) +
     theme(plot.caption=element_text(hjust=0.1, size=12))
 
-ggsave('../../results/plots/5_iMtb_H37Rv_1132_subsystem_accuracy.png',
+ggsave('4_essentiality_susbystem_accuracy.png',
        plot=sub_cap, height=8.9, width=7.4, unit ='in')
 ```

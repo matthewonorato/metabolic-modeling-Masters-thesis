@@ -26,7 +26,7 @@ DESCRIPTION: This script simulates single gene deletions in a metabolic model an
 def sim_vs_exp(mtb_model, obj_fx, exp_data, in_vivo_medium, ko_method, file_name, sheetname):
     """
     Simulates single gene deletions for a JSON model and compares simulated vs. experimental gene essentiality calls
-    :param mtb_model: JSON model
+    :param mtb_model: JSON model (with path)
     :param obj_fx: model objective function
     :param exp_data: column name from essentiality_dataset_comparison.xlsx
     :param in_vivo_medium: from media.py
@@ -136,8 +136,15 @@ def sim_vs_exp(mtb_model, obj_fx, exp_data, in_vivo_medium, ko_method, file_name
     try:
         total = counts['TP'] + counts['TN'] + counts['FP'] + counts['FN']  # + counts['NA']
     except KeyError:
-        print(f'{model.id} could not make any predictions. This is likely due to the model not being able to grow.')
-        return
+        missing_classifications = [cls for cls in ['TP', 'TN', 'FP', 'FN'] if cls not in counts.index.to_list()]
+
+        for missing_classification in missing_classifications:
+            counts[missing_classification] = 0
+
+        total = counts['TP'] + counts['TN'] + counts['FP'] + counts['FN']
+
+        if total == 0:
+            return f'No classifications were made. Was {model.id} able to grow on the provided media?'
 
     df_sim_exp['accuracy'] = ''  # adding empty column and then filling first row only
     df_sim_exp['accuracy'][0] = (counts['TP'] + counts['TN']) / total * 100
@@ -163,85 +170,88 @@ def sim_vs_exp(mtb_model, obj_fx, exp_data, in_vivo_medium, ko_method, file_name
     return
 
 
-model_files = [file for file in os.listdir('../../3_base_model/models/') if file.endswith('.json')]
+def main():
+    model_files = [file for file in os.listdir('../../3_base_model/models/') if file.endswith('.json')]
 
-vitro_datasets = ['Sassetti_2003', 'Griffin_2011', 'Zhang_2012', 'DeJesus_2017', 'Xu_2017', 'Minato_2019']
+    vitro_datasets = ['Sassetti_2003', 'Griffin_2011', 'Zhang_2012', 'DeJesus_2017', 'Xu_2017', 'Minato_2019']
 
-vivo_datasets = ['Sassetti_vivo_2003', 'Zhang_2013', 'ARTIST_2014',
-                 'Mendum_Day3_2015', 'Mendum_Day7_2015', 'Subramaniyam_2019']
+    vivo_datasets = ['Sassetti_vivo_2003', 'Zhang_2013', 'ARTIST_2014',
+                     'Mendum_Day3_2015', 'Mendum_Day7_2015', 'Subramaniyam_2019']
 
+    # calculates gene essentiality accuracies for different biomass reactions using DeJesus dataset & dejesus media
+    # accuracies will be used as one of many metrics in which to select a single biomass reaction for further analyses
+    in_vitro_biomass_rxns = ['biomass_iEK1008_60atp', 'biomass_iEK1011_60atp', 'biomass_iNJ661_60atp',
+                             'biomass_sMtb_CSM_57atp', 'biomass_sMtb_REB_57atp', 'biomass_sMtbRECON_vitro_57atp']
 
-# calculates gene essentiality accuracies for different biomass reactions using DeJesus dataset & dejesus media
-# accuracies will be used as one of many metrics in which to select a single biomass reaction for further analyses
-in_vitro_biomass_rxns = ['biomass_iEK1008_60atp', 'biomass_iEK1011_60atp', 'biomass_iNJ661_60atp',
-                         'biomass_sMtb_CSM_57atp', 'biomass_sMtb_REB_57atp', 'biomass_sMtbRECON_vitro_57atp']
+    with alive_bar(len(in_vitro_biomass_rxns), bar='blocks', spinner='notes_scrolling') as bar:
+        for model_file in model_files:
+            if 'iMtb' in model_file:
+                model_path = f'../../3_base_model/models/{model_file}'
+                model_name = model_file.split('.')[0]
+                combo_name = f'{model_name}_vitro_combinations.xlsx'
 
-with alive_bar(len(in_vitro_biomass_rxns), bar='blocks', spinner='notes_scrolling') as bar:
-    for model_file in model_files:
-        if 'iMtb' in model_file:
-            model_path = f'../../3_base_model/models/{model_file}'
-            model_name = model_file.split('.')[0]
-            combo_name = f'{model_name}_vitro_combinations.xlsx'
-
-            for bm_rxn in in_vitro_biomass_rxns:
-                sim_vs_exp(model_path, bm_rxn, 'DeJesus_2017', None, 'fba', combo_name, f'{bm_rxn}')
-                bar()
-
-
-# calculates gene essentiality accuracies for different biomass reactions using ARTIST dataset & different in vivo media
-# accuracies will be used as one of many metrics in which to select a single biomass reaction for further analyses
-in_vivo_biomass_rxns = {'BM1': 'biomass_iEK1008_60atp',
-                        'BM2': 'biomass_iEK1011_60atp',
-                        'BM3': 'biomass_iNJ661_60atp',
-                        'BM4': 'biomass_iNJ661v_SBML_xml_60atp',
-                        'BM5': 'biomass_sMtb_CSI_57atp',
-                        'BM6': 'biomass_sMtb_IVB_57atp',
-                        'BM7': 'biomass_sMtb_NRC_57atp',
-                        'BM8': 'biomass_sMtbRECON_vivo_57atp'}
-
-in_vivo_media = {'M1': ['iEK_inVivo', media.iEK_inVivo],
-                 'M2': ['sMtb_CSI', media.sMtb_CSI],
-                 'M3': ['sMtb_in_vivo', media.sMtb_in_vivo],
-                 'M4': ['sMtb_in_vivo_mod', media.sMtb_in_vivo_mod],
-                 'M5': ['zimmerman_in_vivo', media.zimmerman_in_vivo]}
-
-in_vivo_keys = {'Key': list(in_vivo_biomass_rxns.keys()) + list(in_vivo_media.keys())}
-in_vivo_names = {'Name': list(in_vivo_biomass_rxns.values()) + [v[0] for v in in_vivo_media.values()]}
-
-df_vivo_summary = pd.DataFrame.from_dict({**in_vivo_keys, **in_vivo_names})
-
-with alive_bar(len(in_vivo_biomass_rxns) * len(in_vivo_media), bar='blocks', spinner='notes_scrolling') as bar:
-    for model_file in model_files:
-        if 'iMtb' in model_file:
-            model_path = f'../../3_base_model/models/{model_file}'
-            model_name = model_file.split('.')[0]
-            combo_name = f'{model_name}_vivo_combinations.xlsx'
-
-            with pd.ExcelWriter('../results/' + combo_name, mode='w') as writer:
-                df_vivo_summary.to_excel(writer, sheet_name='summary', index=False)
-            writer.save()
-
-            for bm_key, bm_rxn in in_vivo_biomass_rxns.items():
-                for medium_key, med in in_vivo_media.items():
-                    sim_vs_exp(model_path, bm_rxn, 'ARTIST_2014', med[1], 'fba', combo_name, f'{bm_key}_{medium_key}')
+                for bm_rxn in in_vitro_biomass_rxns:
+                    sim_vs_exp(model_path, bm_rxn, 'DeJesus_2017', None, 'fba', combo_name, f'{bm_rxn}')
                     bar()
 
+    # calculates gene essentiality accuracies for different biomass rxns using ARTIST dataset & different in vivo media
+    # accuracies will be used as one of many metrics in which to select a single biomass reaction for further analyses
+    in_vivo_biomass_rxns = {'BM1': 'biomass_iEK1008_60atp',
+                            'BM2': 'biomass_iEK1011_60atp',
+                            'BM3': 'biomass_iNJ661_60atp',
+                            'BM4': 'biomass_iNJ661v_SBML_xml_60atp',
+                            'BM5': 'biomass_sMtb_CSI_57atp',
+                            'BM6': 'biomass_sMtb_IVB_57atp',
+                            'BM7': 'biomass_sMtb_NRC_57atp',
+                            'BM8': 'biomass_sMtbRECON_vivo_57atp'}
 
-all_datasets = vitro_datasets + vivo_datasets
+    in_vivo_media = {'M1': ['iEK_inVivo', media.iEK_inVivo],
+                     'M2': ['sMtb_CSI', media.sMtb_CSI],
+                     'M3': ['sMtb_in_vivo', media.sMtb_in_vivo],
+                     'M4': ['sMtb_in_vivo_mod', media.sMtb_in_vivo_mod],
+                     'M5': ['zimmerman_in_vivo', media.zimmerman_in_vivo]}
 
-with alive_bar(len(model_files) * len(all_datasets), bar='blocks', spinner='notes_scrolling') as bar:
-    med = media.sMtb_in_vivo_mod
+    in_vivo_keys = {'Key': list(in_vivo_biomass_rxns.keys()) + list(in_vivo_media.keys())}
+    in_vivo_names = {'Name': list(in_vivo_biomass_rxns.values()) + [v[0] for v in in_vivo_media.values()]}
 
-    for model_file in model_files:
-        model_path = f'../../3_base_model/models/{model_file}'
-        mod_name = model_file.rsplit('.', maxsplit=1)[0]
+    df_vivo_summary = pd.DataFrame.from_dict({**in_vivo_keys, **in_vivo_names})
 
-        for ko_mthd in ['fba']:  # moma and room not used --> too long to run --> see 4.py for alternative approach
-            for dataset in all_datasets:
-                if dataset in vitro_datasets:
-                    bm_rxn = 'biomass_iNJ661_60atp'
-                else:
-                    bm_rxn = 'biomass_iNJ661v_SBML_xml_60atp'
+    with alive_bar(len(in_vivo_biomass_rxns) * len(in_vivo_media), bar='blocks', spinner='notes_scrolling') as bar:
+        for model_file in model_files:
+            if 'iMtb' in model_file:
+                model_path = f'../../3_base_model/models/{model_file}'
+                model_name = model_file.split('.')[0]
+                cmb_name = f'{model_name}_vivo_combinations.xlsx'
 
-                sim_vs_exp(model_path, bm_rxn, dataset, med, ko_mthd, f'{mod_name}_predictions.xlsx', f'{dataset}')
-                bar()
+                with pd.ExcelWriter('../results/' + cmb_name, mode='w') as writer:
+                    df_vivo_summary.to_excel(writer, sheet_name='summary', index=False)
+                writer.save()
+
+                for bm_key, bm_rxn in in_vivo_biomass_rxns.items():
+                    for medium_key, med in in_vivo_media.items():
+                        sim_vs_exp(model_path, bm_rxn, 'ARTIST_2014', med[1], 'fba', cmb_name, f'{bm_key}_{medium_key}')
+                        bar()
+
+    all_datasets = vitro_datasets + vivo_datasets
+
+    with alive_bar(len(model_files) * len(all_datasets), bar='blocks', spinner='notes_scrolling') as bar:
+        med = media.sMtb_in_vivo_mod
+
+        for model_file in model_files:
+            model_path = f'../../3_base_model/models/{model_file}'
+            mod_name = model_file.rsplit('.', maxsplit=1)[0]
+
+            for ko_mthd in ['fba']:  # moma and room not used --> too long to run --> see 4.py for alternative approach
+                for dataset in all_datasets:
+                    if dataset in vitro_datasets:
+                        bm_rxn = 'biomass_iNJ661_60atp'
+                    else:
+                        bm_rxn = 'biomass_iNJ661v_SBML_xml_60atp'
+
+                    sim_vs_exp(model_path, bm_rxn, dataset, med, ko_mthd, f'{mod_name}_predictions.xlsx', f'{dataset}')
+                    bar()
+    return
+
+
+if __name__ == '__main__':
+    main()

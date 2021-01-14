@@ -31,13 +31,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Paths
 ```{r}
-biolog_path_iEK <- '../../../4_growth/results/biolog_predictions_iEK1008.xlsx'
+biolog_path_iEK <- '../data/biolog_predictions_iEK1008.xlsx'
 
-biolog_path_iMtb <- '../../../4_growth/results/biolog_predictions_iMtb_H37Rv_1132.xlsx'
+biolog_path_iMtb <- '../data/biolog_predictions_iMtb_H37Rv_1132.xlsx'
 
-ess_iEK <- '../../results/iEK1008_predictions.xlsx'
+ess_iEK <- '../data/iEK1008_predictions.xlsx'
 
-ess_iMtb <- '../../results/iMtb_H37Rv_1132_predictions.xlsx'
+ess_iMtb <- '../data/iMtb_H37Rv_1132_predictions.xlsx'
 ```
 
 
@@ -122,81 +122,15 @@ acc <- ggplot(acc_iEK_iMtb, aes(fill=Model, y=value, x=sheet_ord)) +
        annotate('text', x=7.05, y=98, label='← in vitro', size=3) +
        scale_y_continuous(expand=c(0, 0)) + coord_cartesian(ylim=c(0, 100))
 
-# for Git's README
-ggsave('../../results/plots/4A_essentiality_and_biolog_accuracy_no_caption.jpg',
-       height=4, width=10, unit ='in')
+ggsave('3_essentiality_and_biolog_acc_mcc.jpg',
+       plot=acc, height=4, width=10, unit ='in')
 
-cap <- textbox_grob('**Figure 6. Accuracy for iEK1008 and iMtb_H37Rv_1132
-                    across all Biolog and Gene Essentiality Studies**', 
-         gp=gpar(fontsize=10), x=unit(0.51, 'npc'), y=unit(0.45, 'npc'))
-
-acc_cap <- grid.arrange(acc, cap, heights=c(2, 0.1))
-
-ggsave('../../results/plots/4A_essentiality_and_biolog_accuracy.jpg',
-       plot=acc_cap, height=4, width=10, unit ='in')
-```
-
-
-Gene Essentiality: MCCs for iEK1008 & iMtb_H37Rv_1132 in sMtb_in_vivo_mod
-```{r}
-ess_mcc_iEK <- ess_iEK %>% excel_sheets() %>% purrr::set_names() %>%
-  map_df(~ read_excel(path=ess_iEK, sheet=.x, range='H1:H2'), .id='sheet')
-
-# removes excess column and rows not needed for this analysis
-ess_mcc_iEK <- ess_mcc_iEK %>% dplyr::select(sheet, MCC) %>%
-  dplyr::filter(sheet != 'iEK1008_all_predictions')
-
-ess_biolog_mcc_iEK <- rbind(ess_mcc_iEK, biolog_mcc_iEK) %>%
-  dplyr::rename('iEK1008'='MCC')
-```
-
-```{r}
-ess_mcc_iMtb <- ess_iMtb %>% excel_sheets() %>% purrr::set_names() %>%
-  map_df(~ read_excel(path=ess_iMtb, sheet=.x, range='H1:H2'), .id='sheet')
-
-# removes excess column and rows not needed for this analysis
-ess_mcc_iMtb <- ess_mcc_iMtb %>% dplyr::select(sheet, MCC) %>%
-  dplyr::filter(sheet != 'iMtb_H37Rv_1132_all_predictions')
-
-ess_biolog_mcc_iMtb <- rbind(ess_mcc_iMtb, biolog_mcc_iMtb) %>%
-  dplyr::rename('iMtb_H37Rv_1132'='MCC')
-```
-
-```{r}
-mcc_iEK_iMtb <- full_join(ess_biolog_mcc_iEK,
-                          ess_biolog_mcc_iMtb, by='sheet') %>%
-  pivot_longer(cols=iEK1008:iMtb_H37Rv_1132, names_to='Model')
-
-# reorders data to desired order using tab names
-tabs_ess_mcc <- excel_sheets(path=ess_iMtb)
-
-mcc_iEK_iMtb$sheet_ord <- factor(mcc_iEK_iMtb$sheet,
-                                 levels=c('Biolog_Rosin', tabs_ess_mcc))
-
-mcc <- ggplot(mcc_iEK_iMtb, aes(fill=Model, y=value, x=sheet_ord)) +
-       geom_bar(position='dodge', stat='identity', width=0.5, color='white') +
-       scale_fill_manual(values=c('#A3D9E6', '#4AA5C2')) +
-       labs(x='Dataset', y='Model MCC') + theme_classic() +
-       theme(legend.position='top',
-             axis.title.x = element_text(size=10, face='bold'),    
-             axis.title.y = element_text(size=10, face='bold'),
-             axis.text.x=element_text(angle=25, hjust=1, size=8, face='bold')) +
-       geom_text(aes(label=round(value, 2)), position=position_dodge(0.55),  
-                 hjust=0.5, vjust='outward', size=2) +
-       geom_hline(yintercept=c(0), linetype='solid') +
-       geom_vline(xintercept=c(1.5), linetype='solid', size=0.4) +
-       geom_vline(xintercept=c(7.5), linetype='dotted') +
-       annotate('text', x=7.95, y=0.95, label='in vivo →', size=3) +
-       annotate('text', x=7.05, y=0.95, label='← in vitro', size=3) +
-       coord_cartesian(ylim = c(-0.2, 0.95))
-
-cap <- textbox_grob('**Supplemental Figure 6. MCC for iEK1008 and
-                    iMtb_H37Rv_1132 across all Biolog and Gene Essentiality
-                    Studies**', 
-         gp=gpar(fontsize=10), x=unit(0.51, 'npc'), y=unit(0.45, 'npc'))
-
-mcc_cap <- grid.arrange(mcc, cap, heights=c(2, 0.1))
-
-ggsave('../../results/plots/4A_essentiality_and_biolog_MCC.jpg',
-       plot=mcc_cap, height=4, width=10, unit ='in')
+# cap <- textbox_grob('**Figure 6. Accuracy for iEK1008 and iMtb_H37Rv_1132
+#                     across all Biolog and Gene Essentiality Studies**', 
+#          gp=gpar(fontsize=10), x=unit(0.51, 'npc'), y=unit(0.45, 'npc'))
+# 
+# acc_cap <- grid.arrange(acc, cap, heights=c(2, 0.1))
+# 
+# ggsave('3_essentiality_and_biolog_acc_mcc_caption.jpg',
+#        plot=acc_cap, height=4, width=10, unit ='in')
 ```

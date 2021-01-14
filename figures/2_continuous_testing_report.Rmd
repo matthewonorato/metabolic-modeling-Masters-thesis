@@ -9,8 +9,7 @@ status: 'final'
 output: html_document
 ---
 
-DESCRIPTION: This script creates 10 line charts that each track a particular
-             model statistic after each update to the model.
+DESCRIPTION: This script creates 10 line charts that each track a particular                  model statistic after each update to the model.
 
 ```{r setup, include=FALSE}
 library(tidyverse)
@@ -30,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
-test_suite <- read.csv('../../results/iEK1008_test_suite.tsv', sep='\t')
+test_suite <- read.csv('../data/iEK1008_test_suite.tsv', sep='\t')
 
 # remove rows 2-11 (make plot confusing) & columns 1-8 columns (won't be plotted)
 all_tests <- test_suite[c(1:1, 11:nrow(test_suite)), c(8:length(test_suite))] %>%
@@ -69,11 +68,11 @@ cap <- textbox_grob('**Figure 2. Continuous Testing Report.** A total of 298
                     model was not negatively impacted during the update
                     process. Beneficial updates were accepted and retained in the
                     model (seen here) while detrimental update were rejected (not
-                    shown).', 
-         gp=gpar(fontsize=14), x=unit(0.52, 'npc'), y=unit(0.45, 'npc'))
+                    shown). NTP: Nucleoside triphosphate.', 
+         gp=gpar(fontsize=14), x=unit(0.52, 'npc'), y=unit(0.42, 'npc'))
 
-ci_cap <- grid.arrange(ci, cap, heights=c(2, 0.2))
+ci_cap <- grid.arrange(ci, cap, heights=c(2, 0.35))
 
-ggsave('../../results/plots/4_continuous_testing_report.jpg',
+ggsave('2_continuous_testing_report.jpg',
        plot=ci_cap, height=5.5, width=16.9, unit ='in')
 ```
